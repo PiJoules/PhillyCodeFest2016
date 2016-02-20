@@ -35,7 +35,7 @@ void loop() {
 
     //Update LEDs
     digitalWrite(PIN_LATCH, LOW);
-    shiftOut(PIN_DATA, PIN_CLOCK, MSBFIRST, arrivalStatus);
+    shiftOut(PIN_DATA, PIN_CLOCK, LSBFIRST, arrivalStatus);
     digitalWrite(PIN_LATCH, HIGH);
 
     //Wait for the ETA of next bus
