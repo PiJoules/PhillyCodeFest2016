@@ -16,7 +16,7 @@ void setup() {
 
     //Clear Shift Register
     digitalWrite(PIN_LATCH, LOW);
-    shiftOut(PIN_DATA, PIN_CLOCK, MSBFIRST, 0);
+    shiftOut(PIN_DATA, PIN_CLOCK, LSBFIRST, 0);
     digitalWrite(PIN_LATCH, HIGH);
 
     //Initialize Serial Port
@@ -34,11 +34,11 @@ void setup() {
 void loop() {
     //Wait for the arrival status
     while (Serial.available() < 1);
-    uint8_t arrivalStatus = Serial.read();
+    uint8_t arrival_status = Serial.read();
 
     //Update LEDs
     digitalWrite(PIN_LATCH, LOW);
-    shiftOut(PIN_DATA, PIN_CLOCK, LSBFIRST, arrivalStatus);
+    shiftOut(PIN_DATA, PIN_CLOCK, LSBFIRST, arrival_status);
     digitalWrite(PIN_LATCH, HIGH);
 
     //Wait for the ETA of next bus
@@ -47,7 +47,16 @@ void loop() {
     uint8_t eta_low = Serial.read();
     uint16_t eta = eta_high << 8 | eta_low;
 
-    if (arrivalStatus) {
+    if (arrival_status == 0xFF) {
+        lcd.clear();
+        lcd.print("Bye!");
+
+        //Clear LEDs
+        digitalWrite(PIN_LATCH, LOW);
+        shiftOut(PIN_DATA, PIN_CLOCK, LSBFIRST, 0);
+        digitalWrite(PIN_LATCH, HIGH);
+    }
+    else if (arrival_status) {
         //Update LCD
         lcd.clear();
         lcd.print("Next bus arrives");

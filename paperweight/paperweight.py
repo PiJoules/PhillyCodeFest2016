@@ -21,19 +21,23 @@ ser.read(1)
 print "Connected!"
 
 print "Press Ctrl + C to exit."
-while True:
-    #Query the current status
-    #TODO: use requests!
-    data = {
-        'arrival_status': random.randint(0, 6),
-        'eta': random.randint(0, 600),
-    }
+try:
+    while True:
+        #Query the current status
+        #TODO: use requests!
+        data = {
+            'arrival_status': random.randint(0, 6),
+            'eta': random.randint(0, 600),
+        }
 
-    arrival_status = data['arrival_status']
-    arrival_status = 0 if arrival_status == -1 else 1 << arrival_status
+        arrival_status = data['arrival_status']
+        arrival_status = 0 if arrival_status == -1 else 1 << arrival_status
 
-    eta = data['eta']
+        eta = data['eta']
 
-    data = struct.pack(">BH", arrival_status, eta)
-    ser.write(data)
-    time.sleep(REQUEST_DELAY)
+        data = struct.pack(">BH", arrival_status, eta)
+        ser.write(data)
+        time.sleep(REQUEST_DELAY)
+except KeyboardInterrupt:
+    print "Bye!"
+    ser.write("\xFF\xFF\xFF")
