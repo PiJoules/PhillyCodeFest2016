@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import json
 import time
+import requests
 
 from flask import Flask, request, redirect
 from septanotifier import SeptaNotifier
@@ -16,6 +17,18 @@ app = Flask(__name__)
 @app.route('/')
 def index_route():
     return "Nothing to see here"
+
+
+@app.route("/transitview/<int:route>")
+def transitview_route(route):
+    resp = requests.get("http://www3.septa.org/hackathon/TransitView/" + route)
+    return resp.text
+
+
+@app.route("/stops/<int:route>")
+def stops_route(route):
+    resp = requests.get("http://www3.septa.org/hackathon/Stops/" + route)
+    return resp.text
 
 
 @app.route("/data")
@@ -47,7 +60,7 @@ def data_route():
     direction = direction.lower()
     try:
         notifier = SeptaNotifier(int(route), direction, int(stop_id),
-                                 user_offset=user_offset)
+                                 user_offset=int(user_offset))
     except Exception as e:
         return json.dumps({
             "error": 400,
