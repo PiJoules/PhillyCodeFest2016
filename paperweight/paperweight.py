@@ -17,6 +17,9 @@ REQUEST_DELAY = 60
 MESSAGE_BYE = b'\xFF\xFF\xFF'
 
 class BadResponse(Exception):
+    """
+    We sent a request and got back garbage. Whoops.
+    """
     def __str__(self):
         return "ERROR: {}".format(self.message)
 
