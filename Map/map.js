@@ -10,7 +10,7 @@ $( "#submit" ).click(function() {
     if($("#map").length){
         $("#map").remove()
         }
-    $( "body" ).append( $newdiv1, [ newdiv2, existingdiv1 ] );
+    $( "body" ).append( "<div class=' text-center' id='map' style='height: 80%'></div>" );
 })
  function initMap() {
             
