@@ -333,7 +333,6 @@ class SeptaNotifier(object):
 if __name__ == "__main__":
     import json
     x = SeptaNotifier(33, "NorthBound", 359)
-    # print(x.eta, x.arrival_status, x.next_bus)
     print(json.dumps({
         "eta": x.eta,
         "arrival_status": x.arrival_status
@@ -343,4 +342,3 @@ if __name__ == "__main__":
         "arrival_status": x.arrival_status,
         "nearest_bus": x.next_bus
     }, indent=4))
-    pass
