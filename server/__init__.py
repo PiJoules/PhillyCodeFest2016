@@ -65,9 +65,6 @@ def data_real_route():
 
 @app.route("/data")
 def data_route():
-    # Redirect to test
-    return redirect("/data_test")
-
     """Get the latest info for the nearest bus."""
     route = request.args.get("route", None)
     direction = request.args.get("direction", None)
