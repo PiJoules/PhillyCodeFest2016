@@ -1,0 +1,14 @@
+{
+    "eta": 598, 
+    "nearest_bus": {
+        "Direction": "NorthBound", 
+        "destination": "23rd - Venango", 
+        "VehicleID": "7381", 
+        "eta": 598, 
+        "lat": 39.94292485994898, 
+        "lng": -75.14381654990402, 
+        "BlockID": "5165", 
+        "label": "7381"
+    }, 
+    "arrival_status": 1
+}

@@ -10,7 +10,9 @@ from __future__ import print_function
 import requests
 
 from bs4 import BeautifulSoup
+from geopy import Point
 from geopy.distance import vincenty
+from math import radians, sin, cos, degrees, atan2
 
 
 BASE = "http://www3.septa.org/hackathon/TransitView/"
@@ -34,6 +36,7 @@ class SeptaNotifier(object):
         self._next_bus = None
         self._eta = None
         self._arrival_status = None
+        self.__nearest_bus_dist_matrix = None
 
     @property
     def buses(self):
@@ -86,7 +89,7 @@ class SeptaNotifier(object):
 
     @property
     def next_bus(self):
-        """The next to arrive bus."""
+        """The next to arrive bus (actual, not septa)."""
         if self._next_bus is None:
             self._next_bus = self.__bus_data(self._route, self._direction)
         return self._next_bus
@@ -94,7 +97,7 @@ class SeptaNotifier(object):
     @property
     def eta(self):
         if self._eta is None:
-            self.__guess_time()
+            self._next_bus = self.__bus_data(self._route, self._direction)
         return self._eta
 
     @property
@@ -188,10 +191,7 @@ class SeptaNotifier(object):
             Unique ID for each bus stop
 
         return:
-            {
-                "arrival_status": -3 to 3,
-                "eta": for next bus in seconds (-1 for no buses coming)
-            }
+            Next bus actual, accounted for real time
         """
         # Check params
         if direction not in ("northbound", "southbound", "eastbound", "westbound"):
@@ -213,6 +213,7 @@ class SeptaNotifier(object):
             return {}
 
         # Filter by direction
+        # buses is the wrong buses returned from septa and filtered.
         buses = filter(lambda x: x["Direction"].lower() == direction, buses)
         if not buses:
             # No buses are found in this direction.
@@ -252,53 +253,94 @@ class SeptaNotifier(object):
 
         # The next bus to arrive
         next_bus = min(buses, key=grade)
-        return next_bus
+        return self.__nearest_real_bus(next_bus, curr_lat, curr_lng)
 
-    def __guess_time(self):
-        """Approximate the distance between the next bus and the given stop."""
-        next_bus = self.next_bus
-        offset_sec = int(next_bus["Offset_sec"])
+    def __bearing(self, start_lat, start_lng, end_lat, end_lng):
+        """Get the bearing from start and end points."""
+        lat1 = radians(start_lat)
+        lat2 = radians(end_lat)
 
+        diff_long = radians(end_lng - start_lng)
+
+        x = sin(diff_long) * cos(lat2)
+        y = cos(lat1) * sin(lat2) - (sin(lat1) * cos(lat2) * cos(diff_long))
+
+        initial_bearing = degrees(atan2(x, y))
+        compass_bearing = (initial_bearing + 360) % 360
+        return compass_bearing
+
+    def __nearest_real_bus(self, septa_bus, end_lat, end_lng):
+        """Get the real bus from a septa bus."""
         # Get approx dist and time from google maps distance matrix api
-        current_stop = self.current_stop
-        stop_coord_str = "{},{}".format(current_stop["lat"], current_stop["lng"])
-        bus_coords_str = "{},{}".format(next_bus["lat"], next_bus["lng"])
+        offset_sec = int(septa_bus["Offset_sec"])
+        septa_lat = float(septa_bus["lat"])
+        septa_lng = float(septa_bus["lng"])
+        bus_coords_str = "{},{}".format(septa_lat, septa_lng)
+        end_coord_str = "{},{}".format(end_lat, end_lng)
         params = {
             "origins": bus_coords_str,
-            "destinations": stop_coord_str,
+            "destinations": end_coord_str,
             "key": KEY
         }
         resp = requests.get("https://maps.googleapis.com/maps/api/distancematrix/json", params=params)
         if resp.status_code != 200:
             raise RuntimeError("({}) Could not get json from '{}': {}".format(
                 resp.status_code, resp.url, resp.text))
+
         rows = resp.json()["rows"]
         if not rows:
-            print("No rows found")
-            self._eta = -1
-            self._arrival_status = -1
-            return
+            raise RuntimeError("No rows found")
 
         elems = rows[0]["elements"]
         if not elems:
-            print("No elements found")
-            self._eta = -1
-            self._arrival_status = -1
-            return
+            raise RuntimeError("No elements found")
 
         sorted_elems = sorted(elems, key=lambda x: x["duration"]["value"])
+        nearest_elem = None
         for elem in sorted_elems:
             duration_sec = elem["duration"]["value"]
             if duration_sec > offset_sec:
-                self._eta = duration_sec - offset_sec
+                # self._eta = duration_sec - offset_sec
+                nearest_elem = elem
                 break
         else:
             # No buses coming since they all passed the stop.
-            print("No buses coming since they all passed the stop.")
-            self._eta = -1
-            self._arrival_status = -1
+            raise RuntimeError("No buses coming since they all passed the stop.")
+
+        distance_met = nearest_elem["distance"]["value"]
+        duration_sec = nearest_elem["duration"]["value"]
+        eta = duration_sec - offset_sec
+        self._eta = eta
+
+        # Get real lng, lat coords for bus
+        start = Point(septa_lat, septa_lng)
+        dist = vincenty(kilometers=distance_met / 1000.0)
+        bearing = self.__bearing(septa_lat, septa_lng, end_lat, end_lng)
+        dest = dist.destination(point=start, bearing=bearing)
+        bus_lat = dest.latitude
+        bus_lng = dest.longitude
+        return {
+            "lat": bus_lat,
+            "lng": bus_lng,
+            "label": septa_bus["label"],
+            "VehicleID": septa_bus["VehicleID"],
+            "BlockID": septa_bus["BlockID"],
+            "Direction": septa_bus["Direction"],
+            "destination": septa_bus["destination"],
+            "eta": eta
+        }
 
 if __name__ == "__main__":
-    x = SeptaNotifier(44, "westbound", 699)
-    print(x.eta, x.arrival_status)
+    import json
+    x = SeptaNotifier(33, "NorthBound", 359)
+    # print(x.eta, x.arrival_status, x.next_bus)
+    print(json.dumps({
+        "eta": x.eta,
+        "arrival_status": x.arrival_status
+    }, indent=4))
+    print(json.dumps({
+        "eta": x.eta,
+        "arrival_status": x.arrival_status,
+        "nearest_bus": x.next_bus
+    }, indent=4))
     pass
