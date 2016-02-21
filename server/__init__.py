@@ -7,7 +7,7 @@ import json
 import time
 import requests
 
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, render_template
 from septanotifier import SeptaNotifier
 
 app = Flask(__name__)
@@ -16,18 +16,18 @@ app = Flask(__name__)
 # Root directory
 @app.route('/')
 def index_route():
-    return "Nothing to see here"
+    return render_template("index.html")
 
 
 @app.route("/transitview/<int:route>")
 def transitview_route(route):
-    resp = requests.get("http://www3.septa.org/hackathon/TransitView/" + route)
+    resp = requests.get("http://www3.septa.org/hackathon/TransitView/" + str(route))
     return resp.text
 
 
 @app.route("/stops/<int:route>")
 def stops_route(route):
-    resp = requests.get("http://www3.septa.org/hackathon/Stops/" + route)
+    resp = requests.get("http://www3.septa.org/hackathon/Stops/" + str(route))
     return resp.text
 
 
