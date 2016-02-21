@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html >
+    <head>
+        <title>Septa Notifier</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+       <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> 
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <h1></h1>
+        <div class="row" style="height:500px"> 
+            <div class="" >
+                <form action="form">
+                Route No: <input type="text" name="route"><br>
+                <input type="submit" value="Submit">
+                </form>
+            </div>
+            <div class=" text-center" id="map" style="height: 100%"></div>
+        </div>
+        <script src="map.js">  
+        </script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD8ZxwIeMMjW12LLRpmqngkX8cT17ynJy0&callback=initMap">
+    </script>
+    </body>
+</html>
