@@ -1,20 +1,15 @@
 #!/usr/bin/env python
-DELAY_AMOUNT = 3
-from serial import Serial
 import time
+import struct
+from serial import Serial
 
 ser = Serial("COM12", 9600)
-#TODO: Use a serial protocol and handshake until we
-#can connect.
-print "Waiting for connection..."
-time.sleep(DELAY_AMOUNT)
-print "Connected!"
+ser.read(1)
 
 for arrivalStatus in xrange(-1, 7):
     status = 0 if arrivalStatus == -1 else 1 << arrivalStatus
-    #TODO: This should eventually be a short
-    eta = status
-    data = chr(status) + chr(eta)
+    eta = status * 5
+    data = struct.pack(">BH", status, eta)
     ser.write(data)
     time.sleep(1)
 

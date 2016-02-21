@@ -1,9 +1,9 @@
 #include <LiquidCrystal.h>
 
 //Shift Register Pins
-const int PIN_DATA = 4;
-const int PIN_LATCH = 3;
-const int PIN_CLOCK = 2;
+const uint8_t PIN_DATA = 4;
+const uint8_t PIN_LATCH = 3;
+const uint8_t PIN_CLOCK = 2;
 
 //Set up the LCD
 LiquidCrystal lcd(12, 11, 7, 8, 9, 10);
@@ -26,12 +26,15 @@ void setup() {
     lcd.begin(16, 2);
     lcd.setCursor(0, 0);
     lcd.print("Loading...");
+
+    //Tell Python we're ready to begin
+    Serial.write('\x00');
 }
 
 void loop() {
     //Wait for the arrival status
     while (Serial.available() < 1);
-    byte arrivalStatus = Serial.read();
+    uint8_t arrivalStatus = Serial.read();
 
     //Update LEDs
     digitalWrite(PIN_LATCH, LOW);
@@ -39,14 +42,24 @@ void loop() {
     digitalWrite(PIN_LATCH, HIGH);
 
     //Wait for the ETA of next bus
-    while (Serial.available() < 1);
-    byte eta = Serial.read();
+    while (Serial.available() < 2);
+    uint8_t eta_high = Serial.read();
+    uint8_t eta_low = Serial.read();
+    uint16_t eta = eta_high << 8 | eta_low;
 
-    //Update LCD
-    lcd.setCursor(0, 0);
-    lcd.print("Next bus arrives");
-    lcd.setCursor(0, 1);
-    lcd.print("in ");
-    lcd.print(eta);
-    lcd.print(" min.");
+    if (arrivalStatus) {
+        //Update LCD
+        lcd.setCursor(0, 0);
+        lcd.print("Next bus arrives");
+        lcd.setCursor(0, 1);
+        lcd.print("in ");
+        lcd.print(eta);
+        lcd.print(" min.");
+    }
+    else {
+        lcd.clear();
+        lcd.print("No available");
+        lcd.setCursor(0, 1);
+        lcd.print("buses");
+    }
 }
