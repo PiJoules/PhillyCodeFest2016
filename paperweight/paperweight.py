@@ -11,7 +11,7 @@ from ConfigParser import ConfigParser, NoSectionError, NoOptionError
 #Config file name
 CONFIG_FILE = "paperweight.conf"
 #Request delay in seconds
-REQUEST_DELAY = 30
+REQUEST_DELAY = 60
 #Send this packet to the Arduino to say goodbye
 MESSAGE_BYE = b'\xFF\xFF\xFF'
 
@@ -87,7 +87,11 @@ def fetch_data(url, route_info):
     """
     response = requests.get(url, params=route_info)
     if response.status_code == 200:
-        return response.json()
+        try:
+            return response.json()
+        except Exception:
+            print response.text
+            raise BadResponse("whoops")
     else:
         raise BadResponse("{}: {} - {}".format(response.status_code, response.text, url))
 
@@ -108,7 +112,7 @@ def pack_data(data):
         else:
             arrival_status = 1 << arrival_status
 
-        eta = data['eta']
+        eta = data['eta'] / 60
 
         return struct.pack(">BH", arrival_status, eta)
     except Exception as e:
