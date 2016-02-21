@@ -49,7 +49,7 @@ void loop() {
 
     if (arrivalStatus) {
         //Update LCD
-        lcd.setCursor(0, 0);
+        lcd.clear();
         lcd.print("Next bus arrives");
         lcd.setCursor(0, 1);
         lcd.print("in ");
