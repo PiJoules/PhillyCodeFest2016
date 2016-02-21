@@ -7,6 +7,7 @@ import signal
 from serial import Serial
 from serial.serialutil import SerialException
 from ConfigParser import ConfigParser, NoSectionError, NoOptionError
+from requests.exceptions import ConnectionError
 
 #Config file name
 CONFIG_FILE = "paperweight.conf"
@@ -48,19 +49,19 @@ def read_config(fname):
         print "Error reading serial port information: {}".format(e)
         print "Please check the config file, {}".format(CONFIG_FILE)
         sys.exit(1)
-    except ValueError as e:
-        print "Baud rate must be an integer."
+    except (ValueError, KeyError) as e:
+        print "baud must be an integer."
         print "Please check the config file, {}".format(CONFIG_FILE)
         sys.exit(1)
 
     try:
-        url = config.get('main', 'url')
-    except NoOptionError as e:
-        print "Missing Server URL."
+        misc_info = dict(config.items('main'))
+    except NoSectionError as e:
+        print "Error reading main info section."
         print "Please check the config file, {}".format(CONFIG_FILE)
         sys.exit(1)
 
-    return route_info, serial_info, url
+    return route_info, serial_info, misc_info
 
 def connect(serial_info):
     """
@@ -78,20 +79,26 @@ def connect(serial_info):
     except SerialException as e:
         print "Error connecting to Arduino: {}".format(e)
 
-def fetch_data(url, route_info):
+def fetch_data(misc_info, route_info):
     """
     Fetch data about a route
 
+    :param dict misc_info: main config params, including
+        the server url
     :param dict route_info: the information about
         the route for sending to the Flask server.
     """
-    response = requests.get(url, params=route_info)
+    try:
+        response = requests.get(misc_info['url'], params=route_info)
+    except ConnectionError as e:
+        raise BadResponse("Error when connecting to server: {}".format(e.message))
+
     if response.status_code == 200:
         try:
             return response.json()
-        except Exception:
+        except Exception as e:
             print response.text
-            raise BadResponse("whoops")
+            raise BadResponse("Error when reading JSON: {} Response: {}".format(e, response.text))
     else:
         raise BadResponse("{}: {} - {}".format(response.status_code, response.text, url))
 
@@ -100,6 +107,8 @@ def pack_data(data):
     Pack the message into a serial message
 
     :param dict data: JSON data
+    :param dict misc_info: miscellaneous config params, including
+        the adjusted time
     :rtype: bytes
     :returns: packet message suitable for sending via pySerial
     """
@@ -119,7 +128,7 @@ def pack_data(data):
         raise BadResponse(e)
 
 if __name__ == '__main__':
-    route_info, serial_info, url = read_config(CONFIG_FILE)
+    route_info, serial_info, misc_info = read_config(CONFIG_FILE)
     ser = connect(serial_info)
 
     def bye(signal, frame):
@@ -134,10 +143,12 @@ if __name__ == '__main__':
     print "Press Ctrl + C to exit."
     while True:
         try:
-            data = fetch_data(url, route_info)
+            data = fetch_data(misc_info, route_info)
             packed = pack_data(data)
             ser.write(packed)
         except BadResponse as e:
+            print e
+        except Exception as e:
             print e
         finally:
             time.sleep(REQUEST_DELAY)

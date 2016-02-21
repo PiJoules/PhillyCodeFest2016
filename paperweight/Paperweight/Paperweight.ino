@@ -1,5 +1,9 @@
 #include <LiquidCrystal.h>
 
+/**
+ * Arduino SeptaNotifier, code-named 'Paperweight'
+ */
+
 //Shift Register Pins
 const uint8_t PIN_DATA = 4;
 const uint8_t PIN_LATCH = 3;
@@ -55,6 +59,22 @@ void loop() {
         digitalWrite(PIN_LATCH, LOW);
         shiftOut(PIN_DATA, PIN_CLOCK, LSBFIRST, 0);
         digitalWrite(PIN_LATCH, HIGH);
+    }
+    else if (arrival_status == 0x01) {
+        lcd.clear();
+        lcd.print("Leave now!!");
+        lcd.setCursor(0, 1);
+        lcd.print("ETA: ");
+        lcd.print(eta);
+        lcd.print(" min.");
+    }
+    else if (arrival_status == 0x02) {
+        lcd.clear();
+        lcd.print("Leave soon!");
+        lcd.setCursor(0, 1);
+        lcd.print("ETA: ");
+        lcd.print(eta);
+        lcd.print(" min.");
     }
     else if (arrival_status) {
         //Update LCD
