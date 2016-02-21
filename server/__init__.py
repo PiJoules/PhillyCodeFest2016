@@ -18,51 +18,6 @@ def index_route():
     return "Nothing to see here"
 
 
-@app.route("/data_real")
-def data_real_route():
-    # Redirect to test
-    return redirect("/data_test")
-
-    """Get the latest info for the nearest bus."""
-    route = request.args.get("route", None)
-    direction = request.args.get("direction", None)
-    stop_id = request.args.get("stop_id", None)
-    user_offset = request.args.get("user_offset", None)
-
-    # Check params
-    if route is None:
-        return json.dumps({
-            "error": 400,
-            "message": "route not provided"
-        }, indent=4)
-    if direction is None:
-        return json.dumps({
-            "error": 400,
-            "message": "direction not provided"
-        }, indent=4)
-    if stop_id is None:
-        return json.dumps({
-            "error": 400,
-            "message": "stop_id not provided"
-        }, indent=4)
-
-    # Create notifier
-    direction = direction.lower()
-    try:
-        notifier = SeptaNotifier(int(route), direction, int(stop_id),
-                                 user_offset=user_offset)
-    except Exception as e:
-        return json.dumps({
-            "error": 400,
-            "message": str(e)
-        }, indent=4)
-    return json.dumps({
-        "eta": notifier.eta,
-        "arrival_status": notifier.arrival_status,
-        "nearest_bus": notifier.next_bus
-    }, indent=4)
-
-
 @app.route("/data")
 def data_route():
     """Get the latest info for the nearest bus."""
