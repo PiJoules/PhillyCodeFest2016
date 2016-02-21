@@ -15,14 +15,20 @@ from geopy.distance import vincenty
 from math import radians, sin, cos, degrees, atan2
 
 
-BASE = "http://www3.septa.org/hackathon/TransitView/"
+# URLS
+TRANSITVIEW = "http://www3.septa.org/hackathon/TransitView/{route}"
+STOPIDS = "http://www3.septa.org/stops/bus-stop-ids.php"
+STOPS = "http://www3.septa.org/hackathon/Stops/{route}"
+DISTANCEMATRIX = "https://maps.googleapis.com/maps/api/distancematrix/json"
+
+
 KEY = "AIzaSyDNVFgGVENbLNuUP15b4QgnwmBJ3SygKZY"
 
 
 class SeptaNotifier(object):
     """Class for handling septa api."""
 
-    def __init__(self, route, direction, stop_id):
+    def __init__(self, route, direction, stop_id, user_offset=None):
         self._route = route
         self._direction = direction.lower()
         self._stop_id = stop_id
@@ -37,6 +43,7 @@ class SeptaNotifier(object):
         self._eta = None
         self._arrival_status = None
         self.__nearest_bus_dist_matrix = None
+        self._user_offset = user_offset or 0
 
     @property
     def buses(self):
@@ -111,7 +118,7 @@ class SeptaNotifier(object):
 
     def __transitview_json(self, route):
         """Get bus locations for a route from septa transitview."""
-        resp = requests.get(BASE, params={"route": route})
+        resp = requests.get(TRANSITVIEW.format(route=route))
         if resp.status_code != 200:
             raise RuntimeError("Could not get json for route {} from '{}'.".format(route, resp.url))
         return resp.json()
@@ -122,7 +129,7 @@ class SeptaNotifier(object):
         to get sorted stop_ids.
         """
         # Perform request
-        resp = requests.post("http://www3.septa.org/stops/bus-stop-ids.php",
+        resp = requests.post(STOPIDS,
                              data={"Route": route, "Direction": direction})
         if resp.status_code != 200:
             raise RuntimeError("({}) Could not get html from '{}': {}".format(
@@ -142,7 +149,7 @@ class SeptaNotifier(object):
     def __stops_dict(self, route):
         """Get the stops as a dictionary."""
         # Get json from septa
-        resp = requests.get("http://www3.septa.org/hackathon/Stops/" + str(route))
+        resp = requests.get(STOPS.format(route=route))
         if resp.status_code != 200:
             raise RuntimeError("({}) Could not get json from '{}': {}".format(
                 resp.status_code, resp.url, resp.text))
@@ -202,23 +209,17 @@ class SeptaNotifier(object):
                 .format(direction))
 
         # Get buses
-        resp = requests.get("http://www3.septa.org/hackathon/TransitView/" + str(route))
-        if resp.status_code != 200:
-            raise RuntimeError("({}) Could not get json from '{}': {}".format(
-                resp.status_code, resp.url, resp.text))
-        buses = resp.json()["bus"]
+        buses = self.buses["bus"]
         if not buses:
             # No buses are currently on route for this route
-            print("No buses are currently on route for this route")
-            return {}
+            raise RuntimeError("No buses are currently on route for this route")
 
         # Filter by direction
         # buses is the wrong buses returned from septa and filtered.
         buses = filter(lambda x: x["Direction"].lower() == direction, buses)
         if not buses:
             # No buses are found in this direction.
-            print("No buses are found in this direction.")
-            return {}
+            raise RuntimeError("No buses are found in this direction.")
 
         """
         Get the approximate time for next bus.
@@ -252,8 +253,14 @@ class SeptaNotifier(object):
             return d_curr + d_prev
 
         # The next bus to arrive
-        next_bus = min(buses, key=grade)
-        return self.__nearest_real_bus(next_bus, curr_lat, curr_lng)
+        # next_bus = min(buses, key=grade)
+        # return self.__nearest_real_bus(next_bus, curr_lat, curr_lng)
+        sorted_buses = sorted(buses, key=grade)
+        for bus in sorted_buses:
+            real_bus = self.__nearest_real_bus(bus, curr_lat, curr_lng)
+            if self.eta > 0:
+                return real_bus
+        return {}
 
     def __bearing(self, start_lat, start_lng, end_lat, end_lng):
         """Get the bearing from start and end points."""
@@ -282,7 +289,7 @@ class SeptaNotifier(object):
             "destinations": end_coord_str,
             "key": KEY
         }
-        resp = requests.get("https://maps.googleapis.com/maps/api/distancematrix/json", params=params)
+        resp = requests.get(DISTANCEMATRIX, params=params)
         if resp.status_code != 200:
             raise RuntimeError("({}) Could not get json from '{}': {}".format(
                 resp.status_code, resp.url, resp.text))
@@ -309,7 +316,7 @@ class SeptaNotifier(object):
 
         distance_met = nearest_elem["distance"]["value"]
         duration_sec = nearest_elem["duration"]["value"]
-        eta = duration_sec - offset_sec
+        eta = duration_sec - offset_sec - self._user_offset
         self._eta = eta
 
         # Get real lng, lat coords for bus
@@ -332,7 +339,7 @@ class SeptaNotifier(object):
 
 if __name__ == "__main__":
     import json
-    x = SeptaNotifier(33, "NorthBound", 359)
+    x = SeptaNotifier(33, "NorthBound", 359, user_offset=300)
     print(json.dumps({
         "eta": x.eta,
         "arrival_status": x.arrival_status
