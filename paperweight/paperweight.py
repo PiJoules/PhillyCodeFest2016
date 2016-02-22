@@ -103,7 +103,7 @@ def fetch_data(misc_info, route_info):
             print response.text
             raise BadResponse("Error when reading JSON: {} Response: {}".format(e, response.text))
     else:
-        raise BadResponse("{}: {} - {}".format(response.status_code, response.text, url))
+        raise BadResponse("{}: {} - {}".format(response.status_code, response.text, misc_info['url']))
 
 def pack_data(data):
     """
