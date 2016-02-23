@@ -37,7 +37,7 @@ def data_route():
     route = request.args.get("route", None)
     direction = request.args.get("direction", None)
     stop_id = request.args.get("stop_id", None)
-    user_offset = request.args.get("user_offset", None)
+    user_offset = request.args.get("user_offset", 0)
 
     # Check params
     if route is None:
@@ -61,17 +61,16 @@ def data_route():
     try:
         notifier = SeptaNotifier(int(route), direction, int(stop_id),
                                  user_offset=int(user_offset))
+        return json.dumps({
+            "eta": notifier.eta,
+            "arrival_status": notifier.arrival_status,
+            "nearest_bus": notifier.next_bus
+        }, indent=4)
     except Exception as e:
         return json.dumps({
             "error": 400,
             "message": str(e)
         }, indent=4)
-    return json.dumps({
-        "eta": notifier.eta,
-        "arrival_status": notifier.arrival_status,
-        "nearest_bus": notifier.next_bus
-    }, indent=4)
-
 
 @app.route("/data_test")
 def data_test_route():
