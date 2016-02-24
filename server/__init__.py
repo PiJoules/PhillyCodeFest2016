@@ -5,8 +5,9 @@ from __future__ import print_function
 
 import json
 import time
+import requests
 
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, render_template
 from septanotifier import SeptaNotifier
 
 app = Flask(__name__)
@@ -15,7 +16,19 @@ app = Flask(__name__)
 # Root directory
 @app.route('/')
 def index_route():
-    return "Nothing to see here"
+    return render_template("index.html")
+
+
+@app.route("/transitview/<int:route>")
+def transitview_route(route):
+    resp = requests.get("http://www3.septa.org/hackathon/TransitView/" + str(route))
+    return resp.text
+
+
+@app.route("/stops/<int:route>")
+def stops_route(route):
+    resp = requests.get("http://www3.septa.org/hackathon/Stops/" + str(route))
+    return resp.text
 
 
 @app.route("/data")
@@ -24,41 +37,58 @@ def data_route():
     route = request.args.get("route", None)
     direction = request.args.get("direction", None)
     stop_id = request.args.get("stop_id", None)
-    user_offset = request.args.get("user_offset", None)
+    user_offset = request.args.get("user_offset", 0)
 
-    # Check params
-    if route is None:
+
+    #Validation/reformatting
+    try:
+        route = int(route)
+    except (ValueError, TypeError) as e:
         return json.dumps({
             "error": 400,
-            "message": "route not provided"
+            "message": ("route={}: route is required and "
+                "must be an int").format(route)
         }, indent=4)
+
     if direction is None:
         return json.dumps({
             "error": 400,
-            "message": "direction not provided"
+            "message": ("Direction (northbound/southbound or "
+                "eastbound/westbound) is required")
         }, indent=4)
-    if stop_id is None:
+    direction = direction.lower()
+    
+    try:
+        stop_id = int(stop_id)
+    except (ValueError, TypeError) as e:
         return json.dumps({
             "error": 400,
-            "message": "stop_id not provided"
+            "message": ("stop_id={}: stop_id is required and "
+                "must be an int").format(stop_id)
+        }, indent=4)
+
+    try:
+        user_offset = int(user_offset)
+    except (ValueError, TypeError) as e:
+        return json.dumps({
+            "error": 400,
+            "message": ("user_offset={}: user offset must "
+                "be an int").format(user_offset)
         }, indent=4)
 
     # Create notifier
-    direction = direction.lower()
     try:
-        notifier = SeptaNotifier(int(route), direction, int(stop_id),
-                                 user_offset=user_offset)
+        notifier = SeptaNotifier(route, direction, stop_id, user_offset)
+        return json.dumps({
+            "eta": notifier.eta,
+            "arrival_status": notifier.arrival_status,
+            "nearest_bus": notifier.next_bus
+        }, indent=4)
     except Exception as e:
         return json.dumps({
             "error": 400,
             "message": str(e)
         }, indent=4)
-    return json.dumps({
-        "eta": notifier.eta,
-        "arrival_status": notifier.arrival_status,
-        "nearest_bus": notifier.next_bus
-    }, indent=4)
-
 
 @app.route("/data_test")
 def data_test_route():

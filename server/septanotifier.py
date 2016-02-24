@@ -120,7 +120,7 @@ class SeptaNotifier(object):
         """Get bus locations for a route from septa transitview."""
         resp = requests.get(TRANSITVIEW.format(route=route))
         if resp.status_code != 200:
-            raise RuntimeError("Could not get json for route {} from '{}'.".format(route, resp.url))
+            raise Exception("Could not get json for route {} from '{}'.".format(route, resp.url))
         return resp.json()
 
     def __parse_bus_stop_ids(self, route, direction):
@@ -132,7 +132,7 @@ class SeptaNotifier(object):
         resp = requests.post(STOPIDS,
                              data={"Route": route, "Direction": direction})
         if resp.status_code != 200:
-            raise RuntimeError("({}) Could not get html from '{}': {}".format(
+            raise Exception("({}) Could not get html from '{}': {}".format(
                 resp.status_code, resp.url, resp.text))
 
         # Parse html
@@ -151,7 +151,7 @@ class SeptaNotifier(object):
         # Get json from septa
         resp = requests.get(STOPS.format(route=route))
         if resp.status_code != 200:
-            raise RuntimeError("({}) Could not get json from '{}': {}".format(
+            raise Exception("({}) Could not get json from '{}': {}".format(
                 resp.status_code, resp.url, resp.text))
 
         # Convert the list of dicts to dict mapping stop_id => stop dict
@@ -202,7 +202,7 @@ class SeptaNotifier(object):
         """
         # Check params
         if direction not in ("northbound", "southbound", "eastbound", "westbound"):
-            raise RuntimeError(
+            raise Exception(
                 """
                 The direction provided ({}) is not an allowed direction
                 (Northbound/Southbound/Eastbound/Westbound)."""
@@ -212,14 +212,14 @@ class SeptaNotifier(object):
         buses = self.buses["bus"]
         if not buses:
             # No buses are currently on route for this route
-            raise RuntimeError("No buses are currently on route for this route")
+            raise Exception("No buses are currently on route for this route")
 
         # Filter by direction
         # buses is the wrong buses returned from septa and filtered.
         buses = filter(lambda x: x["Direction"].lower() == direction, buses)
         if not buses:
             # No buses are found in this direction.
-            raise RuntimeError("No buses are found in this direction.")
+            raise Exception("No buses are found in this direction.")
 
         """
         Get the approximate time for next bus.
@@ -291,16 +291,16 @@ class SeptaNotifier(object):
         }
         resp = requests.get(DISTANCEMATRIX, params=params)
         if resp.status_code != 200:
-            raise RuntimeError("({}) Could not get json from '{}': {}".format(
+            raise Exception("({}) Could not get json from '{}': {}".format(
                 resp.status_code, resp.url, resp.text))
 
         rows = resp.json()["rows"]
         if not rows:
-            raise RuntimeError("No rows found")
+            raise Exception("No rows found")
 
         elems = rows[0]["elements"]
         if not elems:
-            raise RuntimeError("No elements found")
+            raise Exception("No elements found")
 
         sorted_elems = sorted(elems, key=lambda x: x["duration"]["value"])
         nearest_elem = None
@@ -312,7 +312,7 @@ class SeptaNotifier(object):
                 break
         else:
             # No buses coming since they all passed the stop.
-            raise RuntimeError("No buses coming since they all passed the stop.")
+            raise Exception("No buses coming since they all passed the stop.")
 
         distance_met = nearest_elem["distance"]["value"]
         duration_sec = nearest_elem["duration"]["value"]
