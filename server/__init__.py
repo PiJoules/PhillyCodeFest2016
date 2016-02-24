@@ -39,43 +39,6 @@ def data_route():
     stop_id = request.args.get("stop_id", None)
     user_offset = request.args.get("user_offset", 0)
 
-
-    #Validation/reformatting
-    try:
-        route = int(route)
-    except (ValueError, TypeError) as e:
-        return json.dumps({
-            "error": 400,
-            "message": ("route={}: route is required and "
-                "must be an int").format(route)
-        }, indent=4)
-
-    if direction is None:
-        return json.dumps({
-            "error": 400,
-            "message": ("Direction (northbound/southbound or "
-                "eastbound/westbound) is required")
-        }, indent=4)
-    direction = direction.lower()
-    
-    try:
-        stop_id = int(stop_id)
-    except (ValueError, TypeError) as e:
-        return json.dumps({
-            "error": 400,
-            "message": ("stop_id={}: stop_id is required and "
-                "must be an int").format(stop_id)
-        }, indent=4)
-
-    try:
-        user_offset = int(user_offset)
-    except (ValueError, TypeError) as e:
-        return json.dumps({
-            "error": 400,
-            "message": ("user_offset={}: user offset must "
-                "be an int").format(user_offset)
-        }, indent=4)
-
     # Create notifier
     try:
         notifier = SeptaNotifier(route, direction, stop_id, user_offset)
