@@ -1,0 +1,41 @@
+blockdiag {
+   group {
+     label= "Arduino Client"
+     LEDs
+     Arduino
+     LCD
+     PythonDriver
+   }
+
+  group {
+     label = "Web Client"
+     color = lightblue
+     Browser
+  }
+
+ group {
+    label = "Web Server"
+    color = lightgreen
+    Flask
+ }
+
+  group {
+     label = DataSources
+     color=chartreuse
+     SEPTA
+     GoogleMaps
+  }
+
+  SEPTA -> Flask
+  GoogleMaps -> Flask
+  Flask -> PythonDriver
+  Flask -> Browser
+  PythonDriver -> Arduino
+  Arduino -> LEDs
+  Arduino -> LCD
+
+  Browser[shape=cloud]
+  SEPTA[shape=cloud]
+  GoogleMaps[label="Google Maps",shape=cloud]
+  PythonDriver[label="Python driver"]
+}

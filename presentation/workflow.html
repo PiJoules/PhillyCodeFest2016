@@ -1,0 +1,53 @@
+<html>
+<head>
+    <script src="http://gitgraphjs.com/js/gitgraph.min.js"></script>
+    <script>
+    window.onload = function() {
+        var gitgraph = new GitGraph({
+            template: "metro",
+            orientation: "horizontal",
+            author: "Peter Gagliardi",
+            mode: "compact"
+        });
+
+        var master = gitgraph.branch("master");
+        master.commit()
+        master.commit()
+        var server = master.branch("server_dev");
+        server.commit()
+        var paperweight = master.branch("paperweight");
+        paperweight.commit()
+        paperweight.commit()
+        paperweight.commit()
+        paperweight.commit()
+
+        server.commit()
+
+        paperweight.commit()
+        paperweight.commit()
+        paperweight.commit()
+        paperweight.commit()
+
+        server.commit()
+
+        paperweight.commit()
+
+        server.commit()
+
+        paperweight.commit()
+
+        server.commit()
+
+        paperweight.commit()
+        paperweight.commit()
+
+        server.merge(master)
+        paperweight.merge(master)
+    }
+    </script>
+</head>
+<body>
+</body>
+    <h1>Possible Workflow</h1>
+    <canvas id="gitGraph"></canvas>
+</html>

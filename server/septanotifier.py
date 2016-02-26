@@ -30,7 +30,7 @@ class SeptaNotifier(object):
 
     def __init__(self, route, direction, stop_id, user_offset=None):
         self._route = route
-        self._direction = direction.lower()
+        self._direction = (direction or '').lower()
         self._stop_id = stop_id
 
         # Initialize properties
@@ -44,6 +44,40 @@ class SeptaNotifier(object):
         self._arrival_status = None
         self.__nearest_bus_dist_matrix = None
         self._user_offset = user_offset or 0
+        self.__validate_params()
+
+    def __validate_params(self):
+        """
+        Validate/reformat all of the inputs
+
+        :raises: ValueError if there's a problem
+            with any of the args
+        """
+        try:
+            self._route = int(self._route)
+        except (ValueError, TypeError) as e:
+            raise ValueError(
+                "route={}: route is required and must be an int".format(
+                    self._route))
+
+        if not self._direction:
+            raise ValueError((
+                "Direction (northbound/southbound/eastbound/westbound) "
+                "is required"))
+
+        try:
+            self._stop_id = int(self._stop_id)
+        except (ValueError, TypeError) as e:
+            raise ValueError(
+                "stop_id={}: stop_id is required and must be an int".format(
+                    self._stop_id))
+
+        try:
+            self._user_offset = int(self._user_offset)
+        except (ValueError, TypeError) as e:
+            raise ValueError(
+                "user_offset={}: user offset must be an int".format(
+                    self._user_offset))
 
     @property
     def buses(self):

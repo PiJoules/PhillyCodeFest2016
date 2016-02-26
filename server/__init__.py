@@ -7,10 +7,16 @@ import json
 import time
 import requests
 
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, jsonify
 from septanotifier import SeptaNotifier
 
 app = Flask(__name__)
+
+
+def bad_response(error_code, message):
+    response = jsonify(message=str(message))
+    response.status_code = error_code
+    return response
 
 
 # Root directory
@@ -37,27 +43,9 @@ def data_route():
     route = request.args.get("route", None)
     direction = request.args.get("direction", None)
     stop_id = request.args.get("stop_id", None)
-    user_offset = request.args.get("user_offset", None)
-
-    # Check params
-    if route is None:
-        return json.dumps({
-            "error": 400,
-            "message": "route not provided"
-        }, indent=4)
-    if direction is None:
-        return json.dumps({
-            "error": 400,
-            "message": "direction not provided"
-        }, indent=4)
-    if stop_id is None:
-        return json.dumps({
-            "error": 400,
-            "message": "stop_id not provided"
-        }, indent=4)
+    user_offset = request.args.get("user_offset", 0)
 
     # Create notifier
-    direction = direction.lower()
     try:
         notifier = SeptaNotifier(int(route), direction, int(stop_id),
                                  user_offset=int(user_offset))
@@ -91,10 +79,10 @@ def data_test_route():
         "Offset_sec": "31"
     }
 
-    return json.dumps({
-        "arrival_status": arrival_status,
-        "eta": eta,
-        "nearest_bus": {
+    return jsonify(
+        arrival_status=arrival_status,
+        eta=eta,
+        nearest_bus={
             "lat": bus_lat,
             "lng": bus_lng,
             "label": septa_bus["label"],
@@ -103,8 +91,7 @@ def data_test_route():
             "Direction": septa_bus["Direction"],
             "destination": septa_bus["destination"],
             "eta": eta
-        }
-    }, indent=4)
+        })
 
 
 if __name__ == '__main__':
