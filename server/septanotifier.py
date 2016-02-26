@@ -22,7 +22,11 @@ STOPS = "http://www3.septa.org/hackathon/Stops/{route}"
 DISTANCEMATRIX = "https://maps.googleapis.com/maps/api/distancematrix/json"
 
 
-KEY = "AIzaSyDNVFgGVENbLNuUP15b4QgnwmBJ3SygKZY"
+# TODO: Remove dependency for google distance matrix api
+# Required config.json contains api key
+with open("config.json", "r") as config:
+    import json
+    KEY = json.load(config)["distance_matrix"]
 
 
 class SeptaNotifier(object):
