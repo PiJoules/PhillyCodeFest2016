@@ -30,7 +30,9 @@ $( "#submit" ).click(function() {
                         // console.log(row);
                         BusCoordinates.push({lat: row["lat"], lng: row["lng"], id: row["label"] });
 
-                        var nearest_bus_url = "/data_test" //?route=" + route + "&direction=" + direction + "&stop_id=" + bus_stop + "&user_offset=" + travel_time;
+                        var nearest_bus_url = "/data_test";
+                        //?route=" + route + "&direction=" + direction + "&stop_id=" + bus_stop + "&user_offset=" + travel_time;
+                        // var nearest_bus_url = "/data?route=" + route + "&direction=" + direction + "&stop_id=" + bus_stop + "&user_offset=" + travel_time;
                         var eta;
                         // console.log(BusCoordinates);
                         $.getJSON(nearest_bus_url, function(data) {
@@ -83,7 +85,7 @@ $( "#submit" ).click(function() {
             var LatLng = {lat: 39.95, lng: -75.1667};
 
             map = new google.maps.Map(document.getElementById('map'), {
-                  zoom: 100,
+                  zoom: 15,
                   center: LatLng
                 });
 

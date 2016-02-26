@@ -61,16 +61,16 @@ def data_route():
     try:
         notifier = SeptaNotifier(int(route), direction, int(stop_id),
                                  user_offset=int(user_offset))
+        return json.dumps({
+            "eta": notifier.eta,
+            "arrival_status": notifier.arrival_status,
+            "nearest_bus": notifier.next_bus
+        }, indent=4)
     except Exception as e:
         return json.dumps({
             "error": 400,
             "message": str(e)
         }, indent=4)
-    return json.dumps({
-        "eta": notifier.eta,
-        "arrival_status": notifier.arrival_status,
-        "nearest_bus": notifier.next_bus
-    }, indent=4)
 
 
 @app.route("/data_test")
