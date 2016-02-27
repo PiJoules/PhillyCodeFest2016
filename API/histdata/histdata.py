@@ -17,10 +17,11 @@ Logging hierarchy:
 
 from __future__ import print_function
 
+from writer import WriterMixin
 from reader import ReaderMixin
 
 
-class HistDataManager(ReaderMixin):
+class HistDataManager(ReaderMixin, WriterMixin):
     """Class for handling data retrieval and storage for the log files."""
 
     def __init__(self, working_dir):
