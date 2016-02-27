@@ -38,15 +38,18 @@ def get_args():
     from argparse import ArgumentParser
     parser = ArgumentParser("Get the closest bus to a stop")
 
-    parser.add_argument("-r", "--route", type=int, help="Route number")
-    parser.add_argument("-d", "--direction",
+    parser.add_argument("-r", "--route", type=int, required=True,
+                        help="Route number")
+    parser.add_argument("-d", "--direction", required=True,
                         choices=("northbound", "southbound", "westbound",
                                  "eastbound"),
                         help="Bus direction")
-    parser.add_argument("-s", "--stop_id", type=int,
+    parser.add_argument("-s", "--stop_id", type=int, required=True,
                         help="Bus stop id. This is meant to be representative "
                         "of the bus stop location and can be swapped with "
                         "the stop lng/lat.")
+    parser.add_argument("--working_dir", default="working_dir",
+                        help="Working directory to place log files.")
 
     args = parser.parse_args()
     return args
@@ -58,9 +61,10 @@ def main():
     route = args.route
     direction = args.direction
     stop_id = args.stop_id
+    working_dir = args.working_dir
 
-    notifier = SeptaNotifier(route, direction)
-    closest_bus = notifier.closest_bus(stop_id)
+    notifier = SeptaNotifier(working_dir)
+    closest_bus = notifier.closest_bus(route, direction, stop_id)
     print(closest_bus)
 
     return 0

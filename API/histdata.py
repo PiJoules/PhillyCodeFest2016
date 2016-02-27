@@ -53,7 +53,10 @@ class BaseDataManager(object):
 
     def _available_bus_data(self, route, sort=False):
         """List of available bus json files for this route."""
+        # Make the dir if not exist yet
         read_dir = os.path.join(self._buses_dir, "route_" + str(route))
+        self.mkdir(read_dir)
+
         files = os.listdir(read_dir)
         if sort:
             files = sorted(files)
@@ -63,7 +66,7 @@ class BaseDataManager(object):
     def mkdir(dirname):
         # Create the dirs if not exist.
         try:
-            os.makedir(dirname)
+            os.makedirs(dirname)
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise RuntimeError(
