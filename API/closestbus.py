@@ -65,7 +65,7 @@ def main():
 
     notifier = SeptaNotifier(working_dir)
     closest_bus = notifier.closest_bus(route, direction, stop_id)
-    print(closest_bus)
+    print("closest_bus:", closest_bus)
 
     return 0
 

@@ -14,6 +14,6 @@ class SeptaNotifier(HistDataManager):
 
     def closest_bus(self, route, direction, stop_id):
         """Bus closest to the given stop."""
-        print(self.latest_bus_data(route))
+        print("latest_bus_data:", self.latest_bus_data(route))
         return None
 
