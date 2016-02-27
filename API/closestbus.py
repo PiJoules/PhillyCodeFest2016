@@ -30,6 +30,8 @@ from __future__ import print_function
 
 import sys
 
+from notifier import SeptaNotifier
+
 
 def get_args():
     """Standard cmd line arg parser."""
@@ -52,6 +54,14 @@ def get_args():
 
 def main():
     args = get_args()
+
+    route = args.route
+    direction = args.direction
+    stop_id = args.stop_id
+
+    notifier = SeptaNotifier(route, direction)
+    closest_bus = notifier.closest_bus(stop_id)
+    print(closest_bus)
 
     return 0
 
