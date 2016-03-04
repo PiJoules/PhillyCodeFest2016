@@ -20,6 +20,8 @@ from __future__ import print_function
 import os
 import errno
 
+from datetime import datetime
+
 
 class BaseDataManager(object):
     """Base manager for managing the hist data."""
@@ -32,6 +34,7 @@ class BaseDataManager(object):
         # Create the dirs
         self.mkdir(self._buses_dir)
         self.mkdir(self._stops_dir)
+        self.mkdir(self._vector_plots_dir)
 
     @property
     def _working_dir(self):
@@ -48,7 +51,12 @@ class BaseDataManager(object):
         """Dir where the stop data will be logged."""
         return os.path.join(self._working_dir, "stops")
 
-    def _available_bus_data(self, route, sort=False):
+    @property
+    def _vector_plots_dir(self):
+        """Dir where the vecotr plots are stored."""
+        return os.path.join(self._working_dir, "vector_plots")
+
+    def _available_bus_files(self, route, sort=False):
         """List of available bus json files for this route."""
         # Make the dir if not exist yet
         read_dir = os.path.join(self._buses_dir, "route_" + str(route))
@@ -58,6 +66,11 @@ class BaseDataManager(object):
         if sort:
             files = sorted(files)
         return map(lambda x: os.path.join(read_dir, x), files)
+
+    def _date_from_file(self, filename):
+        """Get a datetime from the filename."""
+        date_str = filename[-20:-5]
+        return datetime.strptime(date_str, self.DATETIME_FORMAT)
 
     @staticmethod
     def mkdir(dirname):

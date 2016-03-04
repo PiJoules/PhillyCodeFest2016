@@ -2,16 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Save the file as simple json for now.
-
-Logging hierarchy:
-/path/to/working_dir/
-- buses/
-  - route_number/
-    - yyyymmdd_hhmmss.json
-- stops/
-  - route_number/
-    - yyyymmdd_hhmmss.json
+Module for holding the writer mixin.
 """
 
 
@@ -35,7 +26,11 @@ class WriterMixin(BaseDataManager):
         # Write to json file
         filename = datetime.now().strftime(self.DATETIME_FORMAT) + ".json"
         file_path = os.path.join(dst_dir, filename)
-        with open(file_path, "w") as route_file:
+        self.__write_json(file_path)
+
+    def __write_json(self, filename, json_data):
+        """Write json to a file."""
+        with open(filename, "w") as route_file:
             route_file.write(json.dumps(json_data))
 
     def _write_bus_data(self, route, bus_json):
@@ -50,4 +45,11 @@ class WriterMixin(BaseDataManager):
         """
         dst_dir = os.path.join(self._stops_dir, "route_" + str(route))
         self.__write_data(dst_dir, stop_json)
+
+    def _write_vector_plot_data(self, route, direction, json_data):
+        """Write vector plot json."""
+        dst_dir = os.path.join(self._vector_plots_dir, "route_" + str(route))
+        self.mkdir(dst_dir)
+        dst_filename = os.path.join(dst_dir, direction + ".json")
+        self.__write_json(dst_filename, json_data)
 

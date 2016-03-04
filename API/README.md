@@ -10,3 +10,16 @@ Core api functions.
     and is not meant to be permenant. This will be here only for the duration of
     testing and development.
 
+
+## File Hierarchy
+/path/to/working_dir/
+- buses/
+  - route_number/
+    - yyyymmdd_hhmmss.json
+- stops/
+  - route_number/
+    - yyyymmdd_hhmmss.json
+- vector_plots/
+  - route_number/
+    - direction.json
+

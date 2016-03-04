@@ -2,18 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Save the file as simple json for now.
-
-Logging hierarchy:
-/path/to/working_dir/
-- buses/
-  - route_number/
-    - yyyymmdd_hhmmss.json
-- stops/
-  - route_number/
-    - yyyymmdd_hhmmss.json
+Module for holding reader mixin.
 """
-
 
 from __future__ import print_function
 
@@ -50,4 +40,10 @@ class ReaderMixin(BaseDataManager):
         """Read stop json data."""
         read_dir = os.path.join(self._stops_dir, "route_" + str(route))
         return self._read_data(read_dir, timestamp)
+
+    def _read_vector_plots_data(self, route, direction):
+        """Read the vector plot json."""
+        filename = os.path.join(self._vector_plots_dir, "route_" + str(route),
+                                direction + ".json")
+        return self._read_json(filename)
 
